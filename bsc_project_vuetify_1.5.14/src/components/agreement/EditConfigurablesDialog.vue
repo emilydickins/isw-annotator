@@ -30,7 +30,7 @@
                             <v-icon
                                     :disabled="!deleteToreModel"
                                     v-on="on"
-                                    @click="deleteSelectedTore" class="annotator-input__trash"
+                                    @click="deleteSelectedTore" class="agreement-input__trash"
                                     color="red">
                                 delete_outline
                             </v-icon>
@@ -89,7 +89,7 @@
                             <v-icon
                                     :disabled="!deleteRelationshipModel"
                                     v-on="on"
-                                    @click="deleteSelectedRelationship" class="annotator-input__trash"
+                                    @click="deleteSelectedRelationship" class="agreement-input__trash"
                                     color="red">
                                 delete_outline
                             </v-icon>

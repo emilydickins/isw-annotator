@@ -1,11 +1,11 @@
 <template functional>
         <span
-            @click.exact="listeners['annotator-token-click'](props.index)"
-            @click.shift="listeners['annotator-token-click-shift'](props.index)"
-            @click.ctrl="listeners['annotator-token-click-ctrl'](props.index)"
+            @click.exact="listeners['agreement-token-click'](props.index)"
+            @click.shift="listeners['agreement-token-click-shift'](props.index)"
+            @click.ctrl="listeners['agreement-token-click-ctrl'](props.index)"
 
             :id="'token_'+props.index"
-            class="annotator-token-inner"
+            class="agreement-token-inner"
             :class="['token-inner-default',
             props.show_pos && !props.isLinking ? props.posClass:'token-outer-default', 'whitespace',
             {
@@ -13,7 +13,7 @@
               hasOnlyTore: !props.hasName && props.hasTore,
               hasBoth: props.hasName && props.hasTore,
               isAlgoLemma: props.algo_lemma,
-              highlightInSelectedCode: ((props.isLinking || props.annotatorInputVisible) && props.inSelectedCode), // currently SELECTED code
+              highlightInSelectedCode: ((props.isLinking || props.agreementInputVisible) && props.inSelectedCode), // currently SELECTED code
               linkedTogether: props.linkedTogether
             }]">
           {{props.name}}
@@ -72,7 +72,7 @@
                 type: String,
                 required: true
             },
-            annotatorInputVisible: {
+            agreementInputVisible: {
                 type: Boolean,
                 required: true
             }

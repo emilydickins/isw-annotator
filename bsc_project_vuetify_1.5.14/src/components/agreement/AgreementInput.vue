@@ -1,7 +1,7 @@
 <template>
     <v-dialog
             :hide-overlay="true"
-            :persistent="!requiredAnnotationsPresent || isLinking"
+            :persistent="!requiredAgreementsPresent || isLinking"
             :no-click-animation="isLinking"
             v-model="wrapInputVisible"
             v-if="wrapInputVisible"
@@ -152,7 +152,7 @@
                             v-model="name"
                             item-text="name"
                             item-value="name"
-                            :rules="[requiredAnnotationsPresent || 'Either a name or a category is required']"
+                            :rules="[requiredAgreementsPresent || 'Either a name or a category is required']"
                             ref="nameInput"
                             v-if="wrapInputVisible"
                             autofocus
@@ -162,7 +162,7 @@
                     <v-autocomplete
                             class="annotator-input__tore"
                             @change="updateTore"
-                            :rules="[requiredAnnotationsPresent || 'Either a name or a category is required']"
+                            :rules="[requiredAgreementsPresent || 'Either a name or a category is required']"
                             :items="tores"
                             :value="tore"
                             label="Category">
@@ -267,10 +267,10 @@
 <script>
 
     import {mapGetters, mapState} from "vuex";
-    import {Code} from "@/components/annotator/code";
+    import {Code} from "@/components/agreement/code";
 
     export default {
-        name: "AnnotatorInput",
+        name: "AgreementInput",
 
         data(){
             return {
@@ -280,7 +280,7 @@
             }
         },
         computed: {
-            ...mapGetters(["requiredAnnotationsPresent",
+            ...mapGetters(["requiredAgreementsPresent",
                 "isLinking",
                 "codeNames",
                 "selected_code",
@@ -304,10 +304,10 @@
                 },
 
                 set(bool){
-                    if(!this.requiredAnnotationsPresent){  // codes need some kind of label
+                    if(!this.requiredAgreementsPresent){  // codes need some kind of label
                         console.log("Missing required input, ignoring dialog hide")
                     } else {
-                        this.$store.commit("setAnnotatorInputVisible", bool);  // should always be false
+                        this.$store.commit("setAgreementInputVisible", bool);  // should always be false
                     }
                 }
             },
@@ -318,7 +318,7 @@
                 },
                 set(value){
                     this.$store.commit("updateCodeName", value);
-                    this.$store.commit("updateLastAnnotationEditAt")
+                    this.$store.commit("updateLastAgreementEditAt")
                 },
             },
             tore(){
@@ -343,7 +343,7 @@
 
         watch: {
             selected_code(){
-                if(this.selected_code && !this.requiredAnnotationsPresent){
+                if(this.selected_code && !this.requiredAgreementsPresent){
                     let lemma = this.$store.state.tokens[this.selectedToken.index].lemma;
                     console.log("Initializing name and tore fields for new code: "+lemma);
 
@@ -423,7 +423,7 @@
 
                 }
 
-                this.$store.commit("updateLastAnnotationEditAt")
+                this.$store.commit("updateLastAgreementEditAt")
                 this.promptHighlightAll = false;
                 this.snackbarText = "Added "+matching_indices.length+" new encodings."
                 this.showSnackbar = true;
@@ -455,12 +455,12 @@
             updateRelationshipName(value){
                 if(this.$store.state.selected_tore_relationship){
                     this.$store.commit("setRelationshipName", value);
-                    this.$store.commit("updateLastAnnotationEditAt")
+                    this.$store.commit("updateLastAgreementEditAt")
                 }
             },
             updateTore(value){
                 this.$store.commit("updateCodeTore", value);
-                this.$store.commit("updateLastAnnotationEditAt")
+                this.$store.commit("updateLastAgreementEditAt")
             },
             trashClicked(){
                 this.$emit("annotator-input-trash-click");
@@ -477,7 +477,7 @@
             deleteRelationshipClicked(){
                 if(this.selected_tore_relationship){
                     this.$store.commit('delete_tore_relationship', this.selected_tore_relationship)
-                    this.$store.commit("updateLastAnnotationEditAt")
+                    this.$store.commit("updateLastAgreementEditAt")
                 }
                 this.stopLinking()
             },

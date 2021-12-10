@@ -6,25 +6,27 @@ import {
     Code_update_token,
     Code_remove_relationship, CodeToString, TORERelationship, TORERelationship_add_token,
     TORERelationship_set_relationship_name, Code_add_relationship, TORERelationship_remove_token, Code_remove_token
-} from "@/components/annotator/code"
-import {NOUN_COLOR, VERB_COLOR, ADJECTIVE_COLOR} from "@/components/annotator/resources/color";
+} from "@/components/agreement/code"
+import {NOUN_COLOR, VERB_COLOR, ADJECTIVE_COLOR} from "@/components/agreement/resources/color";
 
 Vue.use(Vuex)
 
 import {
-    GET_EXAMPLE_ANNOTATION_POST_ENDPOINT,
-    ANNOTATION_GET_ALL_ENDPOINT,
-    ANNOTATION_GET_ENDPOINT,
-    ANNOTATION_POST_ENDPOINT,
-    ANNOTATION_DELETE_ENDPOINT,
+    AGREEMENT_GET_ALL_ENDPOINT,
+    AGREEMENT_GET_ENDPOINT,
+    AGREEMENT_POST_ENDPOINT,
+    AGREEMENT_DELETE_ENDPOINT,
     GET_ALL_RELATIONSHIPS_ENDPOINT,
-    GET_ALL_TORES_ENDPOINT, POST_ALL_RELATIONSHIPS_ENDPOINT, POST_ALL_TORES_ENDPOINT
+    GET_ALL_TORES_ENDPOINT,
+    POST_ALL_RELATIONSHIPS_ENDPOINT,
+    POST_ALL_TORES_ENDPOINT,
+    GET_EXAMPLE_AGREEMENT_POST_ENDPOINT
 } from "@/RESTconf";
 
 const store = new Vuex.Store({
     state: {
         // DO NOT INCLUDE IN DEPLOYMENT
-        datasets: ["interview_data_normal"],
+        datasets: ["interview_data_normal", "Example Dataset 1", "Example Dataset 2"],
 
         results: [
             {method: "frequency-fcic", name: "Result: Things", topics: {concepts: ["mOodle"]}, dataset_name: "interview_data_normal"},
@@ -43,7 +45,7 @@ const store = new Vuex.Store({
         relationship_names: [],  // relationship types
         tores: [],  // tore categories
 
-        annotatorInputVisible: false,
+        agreementInputVisible: false,
         selected_code: null,
 
         selectedToken: null,
@@ -51,8 +53,8 @@ const store = new Vuex.Store({
 
         selected_tore_relationship: null,
 
-        annotator_uploaded_at: null,
-        annotator_dataset: null,
+        agreement_uploaded_at: null,
+        agreement_dataset: null,
         docs: [],  // document indices from the server start at 1!
         tokens: [],
         codes: [],
@@ -69,21 +71,21 @@ const store = new Vuex.Store({
         all_docs: {index: 0, name: "All Documents", begin_index: 0, end_index: null},
         selected_doc: null, // set it to first when loading
         selected_pos_tags: [],
-        selected_algo_result: null,  // used only in annotation view
+        selected_algo_result: null,  // used only in agreement view
 
-        annotatorViewingCodeResults: false,
-        available_annotations: [],
-        isLoadingAnnotation: false,  // loading the annotation to be displayed
-        selected_annotation: null,
-        isLoadingAvailableAnnotations: false,
-        lastAnnotationEditAt: null,
-        lastAnnotationPostAt: null
+        agreementViewingCodeResults: false,
+        available_agreements: [],
+        isLoadingAgreement: false,  // loading the agreement to be displayed
+        selected_agreement: null,
+        isLoadingAvailableAgreements: false,
+        lastAgreementEditAt: null,
+        lastAgreementPostAt: null
     },
 
     getters: {
 
         showingInput(state){
-            return state.selected_code && state.annotatorInputVisible;
+            return state.selected_code && state.agreementInputVisible;
         },
 
         lemmasFromSelectedResult(state){
@@ -121,9 +123,9 @@ const store = new Vuex.Store({
             return ret.map(l => (l?l.toLowerCase():l));
         },
 
-        annotationAlgoResults(state){
+        agreementAlgoResults(state){
             const valid_methods = ["frequency-fcic", "frequency-rbai"];
-            return state.results.filter(r => r.dataset_name === state.annotator_dataset && valid_methods.includes(r.method));
+            return state.results.filter(r => r.dataset_name === state.agreement_dataset && valid_methods.includes(r.method));
         },
 
         docs(state){
@@ -194,7 +196,7 @@ const store = new Vuex.Store({
             }
         },
 
-        requiredAnnotationsPresent(state){
+        requiredAgreementsPresent(state){
             return (state.selected_code.name !== null && state.selected_code.name !== "") || (state.selected_code.tore !== null && state.selected_code.tore !== "");
         },
 
@@ -289,69 +291,69 @@ const store = new Vuex.Store({
             })
         },
 
-
-        actionGetNewAnnotation: ({
+        actionGetNewAgreement: ({
                                           commit
-                                      }, {name, dataset}) => {
+                                      }, {name, dataset, agreements}) => {
             return new Promise(() => {
-                console.warn("Initializing annotation");
-                commit("setIsLoadingAnnotation", true);
-                axios.post(GET_EXAMPLE_ANNOTATION_POST_ENDPOINT, {
+                console.warn("Initializing agreement");
+                commit("setIsLoadingAgreement", true);
+                axios.post(GET_EXAMPLE_AGREEMENT_POST_ENDPOINT, {
                     name,
-                    dataset
+                    dataset,
+                    agreements
                 })
                     .then(response => {
-                        console.log("actionGetExampleAnnotation Got good response.");
+                        console.log("actionGetExampleAgreement Got good response.");
                         const {data} = response;
-                        commit("setAnnotationPayload", data);
+                        commit("setAgreementPayload", data);
                         commit("updateDocTokens");
                     })
-                    .catch(e => console.error("Error getting annotation: "+e)).finally(() => {
-                        commit("setIsLoadingAnnotation", false)
+                    .catch(e => console.error("Error getting agreement: "+e)).finally(() => {
+                        commit("setIsLoadingAgreement", false)
                 });
             });
         },
 
-        actionGetSelectedAnnotation: ({commit, state}) => {
+        actionGetSelectedAgreement: ({commit, state}) => {
             return new Promise(() => {
-                let name = state.selected_annotation;
-                console.log("Getting annotation: "+name)
-                commit("setIsLoadingAnnotation", true);
-                axios.get(ANNOTATION_GET_ENDPOINT(name))
+                let name = state.selected_agreement;
+                console.log("Getting agreement: "+name)
+                commit("setIsLoadingAgreement", true);
+                axios.get(AGREEMENT_GET_ENDPOINT(name))
                     .then(response => {
-                        console.log("Got response for annotation: "+name);
+                        console.log("Got response for agreement: "+name);
                         const {data} = response;
-                        commit("setAnnotationPayload", data)
+                        commit("setAgreementPayload", data)
                         commit("updateDocTokens")
                     })
-                    .catch(e => console.error("Error getting annotation: "+e)).finally(() => {
-                    commit("setIsLoadingAnnotation", false)
+                    .catch(e => console.error("Error getting agreement: "+e)).finally(() => {
+                    commit("setIsLoadingAgreement", false)
                 });
             })
         },
 
 
-        actionGetAllAnnotations: ({commit}) => {
+        actionGetAllAgreements: ({commit}) => {
             return new Promise(() => {
-                console.log("Getting all annotations...")
-                commit("setIsLoadingAvailableAnnotations", true)
-                axios.get(ANNOTATION_GET_ALL_ENDPOINT)
+                console.log("Getting all agreements...")
+                commit("setIsLoadingAvailableAgreements", true)
+                axios.get(AGREEMENT_GET_ALL_ENDPOINT)
                     .then(response => {
-                        console.log("Got all annotations: ");
+                        console.log("Got all agreements: ");
                         const {data} = response;
                         console.log(data)
-                        commit("setAvailableAnnotations", data);
+                        commit("setAvailableAgreements", data);
                     })
-                    .catch(e => console.error("Error getting all annotations: "+e)).finally(() => {
-                    commit("setIsLoadingAvailableAnnotations", false)
+                    .catch(e => console.error("Error getting all agreements: "+e)).finally(() => {
+                    commit("setIsLoadingAvailableAgreements", false)
                 });
             })
         },
 
-        actionPostCurrentAnnotation: ({state, commit}) => {
+        actionPostCurrentAgreement: ({state, commit}) => {
             return new Promise(() => {
-                console.log("Posting annotation: "+state.selected_annotation);
-                commit("postAnnotationCallback");
+                console.log("Posting agreement: "+state.selected_agreement);
+                commit("postAgreementCallback");
 
                 let postTokens = [];
                 for(let t of state.tokens){
@@ -360,36 +362,36 @@ const store = new Vuex.Store({
                         num_tore_codes: state.token_num_tore_codes[t.index]})
                 }
 
-                axios.post(ANNOTATION_POST_ENDPOINT, {
-                    uploaded_at: state.annotator_uploaded_at,
-                    dataset: state.annotator_dataset,
-                    name: state.selected_annotation,
+                axios.post(AGREEMENT_POST_ENDPOINT, {
+                    uploaded_at: state.agreement_uploaded_at,
+                    dataset: state.agreement_dataset,
+                    name: state.selected_agreement,
                     tokens: postTokens,
                     tore_relationships: state.tore_relationships,
                     codes: state.codes,
                     docs: state.docs.slice(1, state.docs.length)
                 } )
                     .then(() => {
-                        console.log("Got annotation POST response")
+                        console.log("Got agreement POST response")
                     })
-                    .catch(e => console.error("Error POSTing annotation: "+e));
+                    .catch(e => console.error("Error POSTing agreement: "+e));
             })
         },
 
-        actionDeleteAnnotation: ({dispatch, commit}, name) => {
+        actionDeleteAgreement: ({dispatch, commit}, name) => {
             return new Promise(() => {
-                console.log("Deleting annotation: "+name)
-                commit("setIsLoadingAvailableAnnotations", true)
-                axios.delete(ANNOTATION_DELETE_ENDPOINT(name))
+                console.log("Deleting agreement: "+name)
+                commit("setIsLoadingAvailableAgreements", true)
+                axios.delete(AGREEMENT_DELETE_ENDPOINT(name))
                     .then(() => {
-                        console.log("Annotation deleted, fetching available...")
-                        dispatch("actionGetAllAnnotations").finally(() =>
-                            commit("setIsLoadingAvailableAnnotations", false))
+                        console.log("Agreement deleted, fetching available...")
+                        dispatch("actionGetAllAgreements").finally(() =>
+                            commit("setIsLoadingAvailableAgreements", false))
                     })
                     .catch(e => {
-                        console.error("Error deleting annotation: " + e)
+                        console.error("Error deleting agreement: " + e)
                     }).finally(() => {
-                    commit("setIsLoadingAvailableAnnotations", false)
+                    commit("setIsLoadingAvailableAgreements", false)
                     })
             })
         }
@@ -414,9 +416,9 @@ const store = new Vuex.Store({
             state.relationship_owners = owners;
         },
 
-        toggleAnnotatorViewingCodes(state, show){
-            state.annotatorViewingCodeResults = show;
-            console.log("Toggled annotator code view to: "+state.annotatorViewingCodeResults)
+        toggleAgreementViewingCodes(state, show){
+            state.agreementViewingCodeResults = show;
+            console.log("Toggled agreement code view to: "+state.agreementViewingCodeResults)
         },
 
         /**
@@ -466,24 +468,24 @@ const store = new Vuex.Store({
             }
         },
 
-        updateLastAnnotationEditAt(state){
-            state.lastAnnotationEditAt = Date.now()
+        updateLastAgreementEditAt(state){
+            state.lastAgreementEditAt = Date.now()
         },
 
-        resetAnnotator(state){
-            state.isLoadingAvailableAnnotations = false;
-            state.isLoadingAnnotation = false;
+        resetAgreement(state){
+            state.isLoadingAvailableAgreements = false;
+            state.isLoadingAgreement = false;
             state.selected_algo_result = null;
-            state.lastAnnotationEditAt = null;
-            state.lastAnnotationPostAt = null;
+            state.lastAgreementEditAt = null;
+            state.lastAgreementPostAt = null;
 
-            state.annotator_dataset = null;
-            state.annotator_uploaded_at = null;
-            state.selected_annotation = null;
+            state.agreement_dataset = null;
+            state.agreement_uploaded_at = null;
+            state.selected_agreement = null;
             state.selected_doc = null;
             state.selected_pos_tags = []
             state.selected_algo_result = null
-            state.annotatorViewingCodeResults = false
+            state.agreementViewingCodeResults = false
 
             state.tokens = []
             state.docs = []
@@ -493,21 +495,21 @@ const store = new Vuex.Store({
             this.commit("initTokensEfficiencyStructs", true)
         },
 
-        setIsLoadingAnnotation(state, isLoading){
-            state.isLoadingAnnotation = isLoading
+        setIsLoadingAgreement(state, isLoading){
+            state.isLoadingAgreement = isLoading
         },
 
-        setIsLoadingAvailableAnnotations(state, isLoading){
-            state.isLoadingAvailableAnnotations = isLoading
+        setIsLoadingAvailableAgreements(state, isLoading){
+            state.isLoadingAvailableAgreements = isLoading
         },
 
-        postAnnotationCallback(state){
-            state.lastAnnotationPostAt = Date.now()
+        postAgreementCallback(state){
+            state.lastAgreementPostAt = Date.now()
         },
 
-        setAvailableAnnotations(state, annotations){
-            state.available_annotations = annotations;
-            this.commit("setIsLoadingAvailableAnnotations", false);
+        setAvailableAgreements(state, agreements){
+            state.available_agreements = agreements;
+            this.commit("setIsLoadingAvailableAgreements", false);
         },
         // eslint-disable-next-line no-unused-vars
         updateDocTokens(state){
@@ -521,9 +523,9 @@ const store = new Vuex.Store({
             state.doc_tokens = docTokens*/
         },
 
-        setAnnotationPayload(state, {name, tokens, codes, tore_relationships, docs, uploaded_at, dataset}){
-            state.annotator_uploaded_at = uploaded_at;
-            state.annotator_dataset = dataset;
+        setAgreementPayload(state, {name, tokens, codes, tore_relationships, docs, uploaded_at, dataset}){
+            state.agreement_uploaded_at = uploaded_at;
+            state.agreement_dataset = dataset;
 
             for(let token of tokens){
                 Object.freeze(token);
@@ -544,8 +546,8 @@ const store = new Vuex.Store({
             state.docs = newDocs
             state.selected_doc = newDocs[docs.length > 0 ? 1: 0];  // document indices from the server start at 1!
 
-            state.selected_annotation = name;
-            this.commit("setIsLoadingAnnotation", false);
+            state.selected_agreement = name;
+            this.commit("setIsLoadingAgreement", false);
         },
 
         /**
@@ -633,7 +635,7 @@ const store = new Vuex.Store({
 
             for(let i of code.relationship_memberships){
                 this.commit("delete_tore_relationship", state.tore_relationships[i]);  // relationships are dependent upon tore codes
-                this.commit("updateLastAnnotationEditAt")
+                this.commit("updateLastAgreementEditAt")
             }
 
             let codeName = code.name;
@@ -669,9 +671,9 @@ const store = new Vuex.Store({
             this.commit("delete_code",state.selected_code);
         },
 
-        setAnnotatorInputVisible(state, visible){
-            //console.log("setAnnotatorInputVisible: "+visible)
-            state.annotatorInputVisible = visible;
+        setAgreementInputVisible(state, visible){
+            //console.log("setAgreementInputVisible: "+visible)
+            state.agreementInputVisible = visible;
             if(!visible){
                 state.isLinking = false;
                 state.selectedToken = null;
@@ -686,61 +688,6 @@ const store = new Vuex.Store({
             this.commit("setTokensInSelectedCode", [state.selected_code, code]);
             state.selected_code = code;
         },
-
-        /*
-        setHoveringToken(state, token){
-            //console.log("vuex setHoveringToken")
-            // notify token changes
-            if(state.hoveringToken !== null){
-                Vue.set(state.token_is_hovering_token, state.hoveringToken.index, false)
-            }
-            if(token !== null){
-                Vue.set(state.token_is_hovering_token, token.index, true)
-            }
-
-            state.hoveringToken = token;
-
-            // notify hovering code changes
-            let hovering_codes = []
-            if(token !== null){
-                let ind = token.index;
-                if(state.token_num_name_codes[ind] > 0  || state.token_num_tore_codes[ind] > 0){   // better than filtering because we terminate search asap
-                    let remaining_name_codes = state.token_num_name_codes[ind];
-                    let remaining_tore_codes = state.token_num_tore_codes[ind];
-
-                    for(let code of state.codes){
-                        if(code === null){
-                            continue;
-                        }
-                        if(code.tokens.includes(ind)){
-                            hovering_codes.push(code)
-                            if(code.name){
-                                remaining_name_codes--;
-                            }
-                            if(code.tore){
-                                remaining_tore_codes--;
-                            }
-                        }
-                        if(remaining_name_codes <= 0 && remaining_tore_codes <= 0){
-                            break;
-                        }
-                    }
-                }
-            }
-
-            for(let code of state.hovering_codes){
-                for(let token_index of code.tokens){
-                    Vue.set(state.token_is_hovering_code, token_index, false)  // old tokens no longer in hovering code
-                }
-            }
-            for(let code of hovering_codes){
-                for(let token_index of code.tokens){
-                    Vue.set(state.token_is_hovering_code, token_index, true)  // new tokens are in hovering code
-                }
-            }
-
-            state.hovering_codes = hovering_codes;
-        },*/
 
         setSelectedToken(state, token){
             //console.log("Selected token is: "+token)
@@ -819,8 +766,8 @@ const store = new Vuex.Store({
             state.selected_pos_tags = value;
         },
 
-        updateSelectedAnnotation: (state, value) => {
-            state.selected_annotation = value;
+        updateSelectedAgreement: (state, value) => {
+            state.selected_agreement = value;
         }
 
     }

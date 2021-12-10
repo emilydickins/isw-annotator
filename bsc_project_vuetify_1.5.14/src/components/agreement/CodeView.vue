@@ -46,7 +46,7 @@
             </v-card>
         </v-dialog>
         <v-container
-                class="new-annotation-params"
+                class="new-agreement-params"
         >
             <v-layout row justify-left align-center>
                 <v-flex>
@@ -96,7 +96,7 @@
                     :headers="index===0 || index >= 4?this_header.concat([{text: 'Actions', value: 'placeholder'}]):this_header"
                     :items="tab_content[index]"
                     :search="search"
-                    :loading="$store.state.isLoadingAnnotation"
+                    :loading="$store.state.isLoadingAgreement"
                     :rows-per-page-items="[25, 50, 100, 200, {'text':'$vuetify.dataIterator.rowsPerPageAll','value':-1}]"
                     :pagination.sync="paginations[index]"
                     >
@@ -501,7 +501,7 @@
                     this.$store.commit("delete_code", item);
                     setTimeout(()=> this.$emit("show-snackbar", {"msg":"Deleted code occurrence: "+Code_user_display_prompt(item)}))
                 }
-                this.$store.commit("updateLastAnnotationEditAt")
+                this.$store.commit("updateLastAgreementEditAt")
             },
 
             showRenameCodeDialog(code){
@@ -709,7 +709,7 @@
             },
 
             downloadTab(tabIndex, dateString){
-                this.downloadTextFile("annotation_"+this.$store.state.selected_annotation+"_"+dateString+"_"+this.tab_titles[tabIndex].toLowerCase()+".csv", this.getCSVFileString(this.headers[tabIndex], this.tab_content[tabIndex]));
+                this.downloadTextFile("agreement_"+this.$store.state.selected_agreement+"_"+dateString+"_"+this.tab_titles[tabIndex].toLowerCase()+".csv", this.getCSVFileString(this.headers[tabIndex], this.tab_content[tabIndex]));
             },
 
             downloadSelectedTab(){
@@ -734,7 +734,7 @@
                 this.renameCodeNewName = "";
                 this.renameCodeDialog = false;
 
-                this.$parent.doSaveAnnotation(false)
+                this.$parent.doSaveAgreement(false)
             }
 
         }

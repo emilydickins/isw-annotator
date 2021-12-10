@@ -1,17 +1,17 @@
 <template>
   <v-app>
-    <Annotator/>
+    <Agreement/>
   </v-app>
 </template>
 
 <script>
-import Annotator from './components/annotator/Annotator';
+import Agreement from './components/agreement/Agreement';
 
 export default {
   name: 'App',
 
   components: {
-    Annotator,
+    Agreement,
   },
 
   data: () => ({
